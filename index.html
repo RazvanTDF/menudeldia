@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menú del Día — Fortaleza 1786</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #e9ecef;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------- TOOLBAR (no se imprime) ---------- */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #2c3e50;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .toolbar .title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    flex: 0 0 auto;
+  }
+
+  .toolbar .hint {
+    flex: 1;
+    text-align: center;
+    font-size: 15px;
+    opacity: 0.9;
+  }
+
+  .toolbar .buttons {
+    display: flex;
+    gap: 10px;
+    flex: 0 0 auto;
+  }
+
+  .btn {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 8px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-print {
+    background: #27ae60;
+    color: white;
+    font-size: 20px;
+    padding: 10px 28px;
+  }
+
+  .btn-clear {
+    background: #c0392b;
+    color: white;
+  }
+
+  /* ---------- PÁGINA A4 ---------- */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    margin: 20px auto;
+    background: white;
+    padding: 12mm 14mm;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Watermark con background-image + opacidad */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140%;
+    height: 80%;
+    background-image: url('logo.jpeg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page > * { position: relative; z-index: 2; }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+
+  .logo-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-img {
+    height: 68px;
+    width: auto;
+  }
+
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #1a1a1a;
+  }
+
+  .qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .qr-box img { width: 58px; height: 58px; display: block; }
+
+  /* ---------- TÍTULO ---------- */
+  .menu-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 8px 0 2px 0;
+  }
+  .menu-title .es {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .menu-title .eu {
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* ---------- FECHA ---------- */
+  .date-line {
+    text-align: right;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 2px;
+  }
+
+  /* ---------- SECCIONES ---------- */
+  .menu-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    min-height: 0;
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+  }
+
+  .line {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.35;
+    padding: 2px 6px;
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    border-radius: 4px;
+    color: #1a1a1a;
+    transition: background 0.15s;
+    -webkit-text-stroke: 0.5px #1a1a1a;
+    text-rendering: geometricPrecision;
+  }
+
+  .line:hover { background: rgba(245,245,245,0.7); }
+  .line:focus { background: #fff8dc; box-shadow: 0 0 0 2px #f39c12 inset; }
+  .line::placeholder { color: #c8c8c8; font-style: italic; }
+
+  /* Línea extra (incluye) */
+  .extra-line {
+    margin-top: 8px;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: 1px;
+  }
+
+  .extra-line input {
+    text-align: center;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .extra-line input:hover { background: rgba(245,245,245,0.7); }
+  .extra-line input:focus { background: #fff8dc; box-shadow: 0 0 0 2px #f39c12 inset; }
+  .extra-line input::placeholder { color: #c8c8c8; font-style: italic; }
+
+  /* ---------- FOOTER ALÉRGENOS ---------- */
+  .allergens {
+    margin-top: 10px;
+  }
+  .allergens img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* ---------- PRINT ---------- */
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body {
+      background: white;
+      width: 210mm;
+      height: 297mm;
+    }
+    .toolbar { display: none !important; }
+    .page {
+      margin: 0 !important;
+      box-shadow: none !important;
+      width: 210mm !important;
+      height: 297mm !important;
+      padding: 10mm 12mm !important;
+      page-break-after: avoid;
+      page-break-inside: avoid;
+      break-after: avoid;
+      break-inside: avoid;
+      overflow: hidden !important;
+    }
+    .line:hover, .line:focus,
+    .extra-line input:hover, .extra-line input:focus { background: transparent; box-shadow: none; }
+    .line::placeholder, .extra-line input::placeholder {
+      color: transparent;
+      -webkit-text-stroke: 0 transparent;
+    }
+    .page::before {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+
+  /* ---------- RESPONSIVE (sólo pantalla pequeña) ---------- */
+  @media screen and (max-width: 900px) {
+    .page { width: 100%; height: auto; min-height: 100vh; margin: 0; padding: 16px; box-shadow: none; }
+    .brand { font-size: 26px; }
+    .menu-title { font-size: 22px; }
+    .section-title { font-size: 17px; letter-spacing: 2px; }
+    .line { font-size: 16px; }
+    .extra-line { font-size: 15px; }
+    .logo-img { height: 50px; }
+    .toolbar { flex-wrap: wrap; padding: 8px 12px; }
+    .toolbar .title { display: none; }
+    .toolbar .hint { order: 3; width: 100%; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR -->
+<div class="toolbar">
+  <div class="title">FORTALEZA 1786</div>
+  <div class="hint">✍️ Haz clic en cualquier línea para escribir. Se guarda automáticamente.</div>
+  <div class="buttons">
+    <button class="btn btn-clear" onclick="limpiar()">🗑 LIMPIAR</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR MENÚ</button>
+  </div>
+</div>
+
+<!-- PÁGINA -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-box">
+      <img src="logo.jpeg" class="logo-img" alt="Fortaleza 1786">
+      <div class="brand">FORTALEZA 1786</div>
+    </div>
+    <div class="qr-box">
+      <div>menú</div>
+      <img src="download.png" alt="QR">
+      <div>digital</div>
+    </div>
+  </div>
+
+  <!-- TÍTULO -->
+  <div class="menu-title">
+    <span class="es">MENÚ DEL DÍA</span> <strong>/</strong> <span class="eu">EGUNEKO MENUA</span>
+  </div>
+
+  <div class="date-line" id="fecha"></div>
+
+  <!-- CONTENIDO -->
+  <div class="menu-content">
+
+    <div class="section">
+      <div class="section-title">PRIMERO</div>
+      <input type="text" class="line" data-key="p1" placeholder="Plato 1...">
+      <input type="text" class="line" data-key="p2" placeholder="Plato 2...">
+      <input type="text" class="line" data-key="p3" placeholder="Plato 3...">
+      <input type="text" class="line" data-key="p4" placeholder="Plato 4...">
+    </div>
+
+    <div class="section">
+      <div class="section-title">SEGUNDO</div>
+      <input type="text" class="line" data-key="s1" placeholder="Plato 1...">
+      <input type="text" class="line" data-key="s2" placeholder="Plato 2...">
+      <input type="text" class="line" data-key="s3" placeholder="Plato 3...">
+      <input type="text" class="line" data-key="s4" placeholder="Plato 4...">
+    </div>
+
+    <div class="section">
+      <div class="section-title">POSTRE</div>
+      <input type="text" class="line" data-key="d1" placeholder="Postre 1...">
+      <input type="text" class="line" data-key="d2" placeholder="Postre 2...">
+      <input type="text" class="line" data-key="d3" placeholder="Postre 3...">
+      <input type="text" class="line" data-key="d4" placeholder="Postre 4...">
+    </div>
+  </div>
+
+  <!-- LÍNEA EXTRA -->
+  <div class="extra-line">
+    <input type="text" data-key="extra" placeholder="PAN, AGUA, VINO O SIDRA Y CAFÉ — 16,50 €" value="PAN, AGUA, VINO O SIDRA Y CAFÉ — 16,50 €">
+  </div>
+
+  <!-- ALÉRGENOS -->
+  <div class="allergens">
+    <img src="alergenos.png" alt="Información de alérgenos">
+  </div>
+
+</div>
+
+<script>
+  // Fecha de hoy
+  const fecha = new Date();
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  document.getElementById('fecha').textContent =
+    dias[fecha.getDay()].charAt(0).toUpperCase() + dias[fecha.getDay()].slice(1) +
+    ', ' + fecha.getDate() + ' de ' + meses[fecha.getMonth()] + ' de ' + fecha.getFullYear();
+
+  // Guardar automáticamente
+  const inputs = document.querySelectorAll('[data-key]');
+  inputs.forEach(input => {
+    const key = 'menu_' + input.dataset.key;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) input.value = saved;
+    input.addEventListener('input', () => {
+      localStorage.setItem(key, input.value);
+    });
+  });
+
+  function limpiar() {
+    if (!confirm('¿Seguro que quieres borrar todo el menú?')) return;
+    inputs.forEach(input => {
+      if (input.dataset.key === 'extra') {
+        input.value = 'PAN, AGUA, VINO O SIDRA Y CAFÉ — 16,50 €';
+      } else {
+        input.value = '';
+      }
+      localStorage.removeItem('menu_' + input.dataset.key);
+    });
+  }
+</script>
+
+</body>
+</html>
