@@ -10,6 +10,14 @@
 <style>
   * { box-sizing: border-box; }
 
+  :root {
+    --line-size: 24px;
+    --line-gap: 1px;
+    --section-gap: 10px;
+    --section-title-size: 24px;
+    --extra-size: 19px;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
@@ -185,7 +193,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--section-gap);
     margin-top: 8px;
     min-height: 0;
   }
@@ -193,28 +201,36 @@
   .section {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: var(--line-gap);
   }
 
   .section-title {
     font-family: 'Cinzel', serif;
-    font-size: 24px;
+    font-size: var(--section-title-size);
     font-weight: 700;
     letter-spacing: 3px;
     color: #1a1a1a;
     margin-bottom: 3px;
   }
 
+  .line-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+
   .line {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 24px;
+    font-size: var(--line-size);
     font-weight: 700;
     line-height: 1.35;
     padding: 2px 6px;
     border: none;
     outline: none;
     background: transparent;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     border-radius: 4px;
     color: #1a1a1a;
     transition: background 0.15s;
@@ -226,12 +242,60 @@
   .line:focus { background: #fff8dc; box-shadow: 0 0 0 2px #f39c12 inset; }
   .line::placeholder { color: #c8c8c8; font-style: italic; }
 
+  /* Botón eliminar línea (sólo pantalla) */
+  .line-remove {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid #d0d4d9;
+    background: #fff;
+    color: #c0392b;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s, transform 0.1s;
+    padding: 0;
+    line-height: 1;
+  }
+  .line-row:hover .line-remove,
+  .line-row:focus-within .line-remove { opacity: 1; }
+  .line-remove:hover { background: #c0392b; color: #fff; }
+  .line-remove:active { transform: scale(0.92); }
+  .line-row.is-locked .line-remove { display: none; }
+
+  /* Botón añadir línea */
+  .section-add-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 2px;
+  }
+  .btn-add {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    background: transparent;
+    border: 1px dashed #97a3b0;
+    border-radius: 20px;
+    padding: 4px 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-add:hover:not(:disabled) { background: #2c3e50; color: #fff; border-color: #2c3e50; }
+  .btn-add:disabled { opacity: 0.35; cursor: not-allowed; }
+
   /* Línea extra (incluye) */
   .extra-line {
     margin-top: 8px;
     text-align: center;
     font-family: 'Cormorant Garamond', serif;
-    font-size: 19px;
+    font-size: var(--extra-size);
     font-weight: 600;
     color: #1a1a1a;
     letter-spacing: 1px;
@@ -274,12 +338,14 @@
       height: 297mm;
     }
     .toolbar { display: none !important; }
+    .section-add-row { display: none !important; }
+    .line-remove { display: none !important; }
     .page {
       margin: 0 !important;
       box-shadow: none !important;
       width: 210mm !important;
       height: 297mm !important;
-      padding: 10mm 12mm !important;
+      padding: 12mm 14mm !important;
       page-break-after: avoid;
       page-break-inside: avoid;
       break-after: avoid;
@@ -310,6 +376,7 @@
     .toolbar { flex-wrap: wrap; padding: 8px 12px; }
     .toolbar .title { display: none; }
     .toolbar .hint { order: 3; width: 100%; font-size: 12px; }
+    .line-remove { opacity: 1; }
   }
 </style>
 </head>
@@ -318,7 +385,7 @@
 <!-- BARRA SUPERIOR -->
 <div class="toolbar">
   <div class="title">FORTALEZA 1786</div>
-  <div class="hint">✍️ Haz clic en cualquier línea para escribir. Se guarda automáticamente.</div>
+  <div class="hint">✍️ Haz clic en cualquier línea para escribir. Usa <strong>+ Añadir</strong> para más platos (máx. 6). Se guarda automáticamente.</div>
   <div class="buttons">
     <button class="btn btn-clear" onclick="limpiar()">🗑 LIMPIAR</button>
     <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR MENÚ</button>
@@ -326,7 +393,7 @@
 </div>
 
 <!-- PÁGINA -->
-<div class="page">
+<div class="page" id="page">
 
   <!-- HEADER -->
   <div class="header">
@@ -349,30 +416,30 @@
   <div class="date-line" id="fecha"></div>
 
   <!-- CONTENIDO -->
-  <div class="menu-content">
+  <div class="menu-content" id="menu-content">
 
-    <div class="section">
+    <div class="section" data-section="p">
       <div class="section-title">PRIMERO</div>
-      <input type="text" class="line" data-key="p1" placeholder="Plato 1...">
-      <input type="text" class="line" data-key="p2" placeholder="Plato 2...">
-      <input type="text" class="line" data-key="p3" placeholder="Plato 3...">
-      <input type="text" class="line" data-key="p4" placeholder="Plato 4...">
+      <div class="lines"></div>
+      <div class="section-add-row">
+        <button type="button" class="btn-add" data-add="p">+ Añadir plato</button>
+      </div>
     </div>
 
-    <div class="section">
+    <div class="section" data-section="s">
       <div class="section-title">SEGUNDO</div>
-      <input type="text" class="line" data-key="s1" placeholder="Plato 1...">
-      <input type="text" class="line" data-key="s2" placeholder="Plato 2...">
-      <input type="text" class="line" data-key="s3" placeholder="Plato 3...">
-      <input type="text" class="line" data-key="s4" placeholder="Plato 4...">
+      <div class="lines"></div>
+      <div class="section-add-row">
+        <button type="button" class="btn-add" data-add="s">+ Añadir plato</button>
+      </div>
     </div>
 
-    <div class="section">
+    <div class="section" data-section="d">
       <div class="section-title">POSTRE</div>
-      <input type="text" class="line" data-key="d1" placeholder="Postre 1...">
-      <input type="text" class="line" data-key="d2" placeholder="Postre 2...">
-      <input type="text" class="line" data-key="d3" placeholder="Postre 3...">
-      <input type="text" class="line" data-key="d4" placeholder="Postre 4...">
+      <div class="lines"></div>
+      <div class="section-add-row">
+        <button type="button" class="btn-add" data-add="d">+ Añadir postre</button>
+      </div>
     </div>
   </div>
 
@@ -389,7 +456,7 @@
 </div>
 
 <script>
-  // Fecha de hoy
+  // ---------- Fecha ----------
   const fecha = new Date();
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -397,28 +464,142 @@
     dias[fecha.getDay()].charAt(0).toUpperCase() + dias[fecha.getDay()].slice(1) +
     ', ' + fecha.getDate() + ' de ' + meses[fecha.getMonth()] + ' de ' + fecha.getFullYear();
 
-  // Guardar automáticamente
-  const inputs = document.querySelectorAll('[data-key]');
-  inputs.forEach(input => {
-    const key = 'menu_' + input.dataset.key;
-    const saved = localStorage.getItem(key);
+  // ---------- Config ----------
+  const SECTIONS = ['p', 's', 'd'];
+  const PLACEHOLDERS = { p: 'Plato', s: 'Plato', d: 'Postre' };
+  const DEFAULT_COUNT = 4;
+  const MAX_COUNT = 6;
+  const MIN_COUNT = 1;
+
+  const page = document.getElementById('page');
+
+  // ---------- Persistencia ----------
+  const loadValue  = k => localStorage.getItem('menu_' + k);
+  const saveValue  = (k, v) => localStorage.setItem('menu_' + k, v);
+  const removeValue = k => localStorage.removeItem('menu_' + k);
+
+  function loadCount(section) {
+    const raw = parseInt(localStorage.getItem('menu_count_' + section), 10);
+    if (isNaN(raw)) return DEFAULT_COUNT;
+    return Math.min(MAX_COUNT, Math.max(MIN_COUNT, raw));
+  }
+  const saveCount = (section, count) => localStorage.setItem('menu_count_' + section, String(count));
+
+  // ---------- Render ----------
+  const sectionEl = s => document.querySelector('.section[data-section="' + s + '"]');
+  const linesEl   = s => sectionEl(s).querySelector('.lines');
+  const addBtn    = s => sectionEl(s).querySelector('.btn-add');
+
+  function buildRow(section, index) {
+    const row = document.createElement('div');
+    row.className = 'line-row';
+    if (index === 0) row.classList.add('is-locked');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'line';
+    const key = section + (index + 1);
+    input.dataset.key = key;
+    input.placeholder = PLACEHOLDERS[section] + ' ' + (index + 1) + '...';
+    const saved = loadValue(key);
     if (saved !== null) input.value = saved;
-    input.addEventListener('input', () => {
-      localStorage.setItem(key, input.value);
-    });
+    input.addEventListener('input', () => saveValue(key, input.value));
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'line-remove';
+    remove.title = 'Eliminar esta línea';
+    remove.setAttribute('aria-label', 'Eliminar línea');
+    remove.textContent = '×';
+    remove.addEventListener('click', () => removeLine(section, index));
+
+    row.appendChild(input);
+    row.appendChild(remove);
+    return row;
+  }
+
+  function renderSection(section) {
+    const container = linesEl(section);
+    container.innerHTML = '';
+    const count = loadCount(section);
+    for (let i = 0; i < count; i++) container.appendChild(buildRow(section, i));
+    addBtn(section).disabled = count >= MAX_COUNT;
+  }
+
+  function addLine(section) {
+    const count = loadCount(section);
+    if (count >= MAX_COUNT) return;
+    const newCount = count + 1;
+    saveCount(section, newCount);
+    renderSection(section);
+    adjustSizing();
+    const inputs = linesEl(section).querySelectorAll('.line');
+    if (inputs[newCount - 1]) inputs[newCount - 1].focus();
+  }
+
+  function removeLine(section, index) {
+    const count = loadCount(section);
+    if (count <= MIN_COUNT) return;
+    const values = [];
+    for (let i = 0; i < count; i++) values.push(loadValue(section + (i + 1)) || '');
+    values.splice(index, 1);
+    for (let i = 0; i < count; i++) removeValue(section + (i + 1));
+    for (let i = 0; i < values.length; i++) {
+      if (values[i]) saveValue(section + (i + 1), values[i]);
+    }
+    saveCount(section, values.length);
+    renderSection(section);
+    adjustSizing();
+  }
+
+  document.querySelectorAll('.btn-add').forEach(btn => {
+    btn.addEventListener('click', () => addLine(btn.dataset.add));
   });
 
+  // ---------- Auto-ajuste de tamaño ----------
+  // Total de líneas (3..18) -> tamaños que siempre caben en A4 sin columnas
+  function adjustSizing() {
+    const total = SECTIONS.reduce((sum, s) => sum + loadCount(s), 0);
+    let lineSize, lineGap, sectionGap, sectionTitle, extraSize;
+    if (total <= 12) {
+      lineSize = 24; lineGap = 1; sectionGap = 10; sectionTitle = 24; extraSize = 19;
+    } else if (total <= 14) {
+      lineSize = 22; lineGap = 1; sectionGap = 9;  sectionTitle = 23; extraSize = 18;
+    } else if (total <= 16) {
+      lineSize = 20; lineGap = 1; sectionGap = 8;  sectionTitle = 21; extraSize = 17;
+    } else {
+      lineSize = 18; lineGap = 0; sectionGap = 7;  sectionTitle = 20; extraSize = 16;
+    }
+    page.style.setProperty('--line-size', lineSize + 'px');
+    page.style.setProperty('--line-gap', lineGap + 'px');
+    page.style.setProperty('--section-gap', sectionGap + 'px');
+    page.style.setProperty('--section-title-size', sectionTitle + 'px');
+    page.style.setProperty('--extra-size', extraSize + 'px');
+  }
+
+  // ---------- Línea extra ----------
+  const extraInput = document.querySelector('[data-key="extra"]');
+  const extraSaved = loadValue('extra');
+  if (extraSaved !== null) extraInput.value = extraSaved;
+  extraInput.addEventListener('input', () => saveValue('extra', extraInput.value));
+
+  // ---------- Init ----------
+  SECTIONS.forEach(renderSection);
+  adjustSizing();
+
+  // ---------- Limpiar ----------
   function limpiar() {
     if (!confirm('¿Seguro que quieres borrar todo el menú?')) return;
-    inputs.forEach(input => {
-      if (input.dataset.key === 'extra') {
-        input.value = 'PAN, AGUA, VINO O SIDRA Y CAFÉ — 16,50 €';
-      } else {
-        input.value = '';
-      }
-      localStorage.removeItem('menu_' + input.dataset.key);
+    SECTIONS.forEach(s => {
+      for (let i = 0; i < MAX_COUNT; i++) removeValue(s + (i + 1));
+      saveCount(s, DEFAULT_COUNT);
+      renderSection(s);
     });
+    extraInput.value = 'PAN, AGUA, VINO O SIDRA Y CAFÉ — 16,50 €';
+    removeValue('extra');
+    adjustSizing();
   }
+  window.limpiar = limpiar;
 </script>
 
 </body>
